@@ -1,0 +1,44 @@
+---
+- name: Register PHP repository
+  apt_repository: repo="ppa:ondrej/php" validate_certs=false
+
+- name: php-apcu fix install
+  apt: name="php-apcu" install_recommends=no
+  when: >
+    ({{ php_version }} == 5.6)
+    and
+    (('php-apcu' in "{{ php_modules }}" or 'php-apcu' in "{{ php_extensions }}")
+    or
+    ('php5.6-apcu' in "{{ php_modules }}" or 'php5.6-apcu' in "{{ php_extensions }}"))
+
+
+- name: Installing php modules
+  apt: name=php{{php_version | default('5.6')}}-{{ item }} state=present update_cache=yes
+  with_items:
+    - "{{ php_modules | default([]) }}"
+
+
+- name: Installing extensions
+  apt: name=php-{{ item }} state=present update_cache=yes
+  with_items:
+    - "{{ php_extensions | default([]) }}"
+
+
+- name: Installing php-fpm if needed
+  include: php-fpm.yml
+  when: php_fpm
+
+
+- name: Installing composer if needed
+  include: composer.yml
+  when: php_composer
+
+
+- name: Cleanup dependencies
+  apt: name={{ item }} state=absent purge=yes
+  with_items:
+    - apache2
+    - apache2-bin
+    - apache2-data
+    - apache2-utils
+    - libapache2-mod-php{{ php_version }}

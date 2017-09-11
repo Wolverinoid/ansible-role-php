@@ -1,0 +1,14 @@
+---
+- name: Fetch `composer` archive
+  get_url: >
+    url=https://getcomposer.org/installer
+    dest=/tmp/composer_installer
+    mode=0755
+
+- name: Ensure `composer` is installed
+  shell: >
+    /usr/bin/php /tmp/composer_installer
+    --install-dir={{ php_composer_path }}
+    --filename={{ php_composer_name }}
+  args:
+    creates: "{{ php_composer_path }}/{{ php_composer_name }}"
